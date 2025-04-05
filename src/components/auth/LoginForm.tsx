@@ -5,38 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signIn, isLoading } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    // Simulating authentication for Phase 1
-    setTimeout(() => {
-      // In a real app, this would make an API call to verify credentials
-      if (email && password) {
-        // For demo purposes, we're just checking if fields are filled
-        toast({
-          title: "Logged in successfully",
-          description: "Welcome to SmartMatch!",
-        });
-        navigate("/dashboard");
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Please enter valid credentials",
-          variant: "destructive",
-        });
-      }
-      setIsLoading(false);
-    }, 1000);
+    await signIn(email, password);
   };
 
   return (
@@ -77,7 +56,10 @@ const LoginForm = () => {
           </Button>
           <p className="text-sm text-sm-gray-500 text-center">
             Don't have an account?{" "}
-            <a href="#" className="text-sm-blue-600 hover:text-sm-blue-700">
+            <a
+              href="/auth?tab=register"
+              className="text-sm-blue-600 hover:text-sm-blue-700"
+            >
               Register
             </a>
           </p>
