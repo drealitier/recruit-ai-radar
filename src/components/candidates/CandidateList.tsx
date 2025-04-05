@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 
 interface CandidateListProps {
   candidates: Candidate[];
+  searchQuery?: string;
 }
 
-const CandidateList = ({ candidates }: CandidateListProps) => {
+const CandidateList = ({ candidates, searchQuery = "" }: CandidateListProps) => {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -20,6 +21,47 @@ const CandidateList = ({ candidates }: CandidateListProps) => {
   const handleCandidateClick = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
     setIsDialogOpen(true);
+  };
+
+  // Helper function to determine if a skill should be highlighted based on search query
+  const isHighlightedSkill = (skill: string, query: string): boolean => {
+    if (!query) return false;
+    
+    const normalizedSkill = skill.toLowerCase();
+    const normalizedQuery = query.toLowerCase();
+    
+    // Check if the skill directly matches part of the query
+    if (normalizedSkill.includes(normalizedQuery) || normalizedQuery.includes(normalizedSkill)) {
+      return true;
+    }
+    
+    // Check for category matches
+    if ((normalizedQuery.includes("frontend") || normalizedQuery.includes("front end") || 
+         normalizedQuery.includes("front-end")) && 
+        ["react", "angular", "vue", "css", "html", "javascript", "typescript", 
+         "redux", "tailwind", "ui/ux", "scss", "frontend"].some(s => normalizedSkill.includes(s))) {
+      return true;
+    }
+    
+    if ((normalizedQuery.includes("backend") || normalizedQuery.includes("back end") || 
+         normalizedQuery.includes("back-end")) && 
+        ["node.js", "express", "python", "java", "c#", "php", "ruby", "django", 
+         "flask", "spring", "asp.net", "sql", "mongodb", "postgresql", "mysql", "backend"].some(s => normalizedSkill.includes(s))) {
+      return true;
+    }
+    
+    if ((normalizedQuery.includes("devops") || normalizedQuery.includes("dev ops")) && 
+        ["docker", "kubernetes", "aws", "azure", "gcp", "ci/cd", "jenkins", 
+         "terraform", "ansible", "devops", "linux"].some(s => normalizedSkill.includes(s))) {
+      return true;
+    }
+    
+    if ((normalizedQuery.includes("mobile") || normalizedQuery.includes("app")) && 
+        ["react native", "flutter", "swift", "kotlin", "ios", "android", "mobile"].some(s => normalizedSkill.includes(s))) {
+      return true;
+    }
+    
+    return false;
   };
 
   return (
@@ -54,12 +96,13 @@ const CandidateList = ({ candidates }: CandidateListProps) => {
                   key={candidate.id}
                   candidate={candidate}
                   onClick={handleCandidateClick}
+                  searchQuery={searchQuery}
                 />
               ))}
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-sm-gray-500">No candidates in this category yet</p>
+              <p className="text-sm text-gray-500">No candidates in this category yet</p>
             </div>
           )}
         </TabsContent>
@@ -72,12 +115,13 @@ const CandidateList = ({ candidates }: CandidateListProps) => {
                   key={candidate.id}
                   candidate={candidate}
                   onClick={handleCandidateClick}
+                  searchQuery={searchQuery}
                 />
               ))}
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-sm-gray-500">No candidates in this category yet</p>
+              <p className="text-sm text-gray-500">No candidates in this category yet</p>
             </div>
           )}
         </TabsContent>
@@ -90,12 +134,13 @@ const CandidateList = ({ candidates }: CandidateListProps) => {
                   key={candidate.id}
                   candidate={candidate}
                   onClick={handleCandidateClick}
+                  searchQuery={searchQuery}
                 />
               ))}
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-sm-gray-500">No candidates in this category yet</p>
+              <p className="text-sm text-gray-500">No candidates in this category yet</p>
             </div>
           )}
         </TabsContent>
@@ -122,11 +167,11 @@ const CandidateList = ({ candidates }: CandidateListProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <div>
                 <h3 className="font-medium mb-2">Experience</h3>
-                <p className="text-sm text-sm-gray-600">{selectedCandidate.experience}</p>
+                <p className="text-sm text-gray-600">{selectedCandidate.experience}</p>
               </div>
               <div>
                 <h3 className="font-medium mb-2">Education</h3>
-                <p className="text-sm text-sm-gray-600">{selectedCandidate.education}</p>
+                <p className="text-sm text-gray-600">{selectedCandidate.education}</p>
               </div>
             </div>
             
@@ -134,7 +179,13 @@ const CandidateList = ({ candidates }: CandidateListProps) => {
               <h3 className="font-medium mb-2">Skills</h3>
               <div className="flex flex-wrap gap-1">
                 {selectedCandidate.skills.map((skill, index) => (
-                  <Badge key={index} variant="outline">
+                  <Badge 
+                    key={index} 
+                    variant={isHighlightedSkill(skill, searchQuery) ? "default" : "outline"}
+                    className={isHighlightedSkill(skill, searchQuery) 
+                      ? "bg-green-500 hover:bg-green-600" 
+                      : ""}
+                  >
                     {skill}
                   </Badge>
                 ))}
@@ -143,9 +194,16 @@ const CandidateList = ({ candidates }: CandidateListProps) => {
             
             <div className="mt-4">
               <h3 className="font-medium mb-2">AI Assessment</h3>
-              <p className="text-sm text-sm-gray-600">
+              <p className="text-sm text-gray-600">
                 This candidate has strong experience in the required areas.
-                Their skills in {selectedCandidate.skills.slice(0, 3).join(", ")} align well with the position requirements.
+                {searchQuery && selectedCandidate.skills.some(skill => isHighlightedSkill(skill, searchQuery)) ? (
+                  <> Their skills in {selectedCandidate.skills
+                    .filter(skill => isHighlightedSkill(skill, searchQuery))
+                    .slice(0, 3)
+                    .join(", ")} align well with your search criteria.</>
+                ) : (
+                  <> Their skills in {selectedCandidate.skills.slice(0, 3).join(", ")} align well with the position requirements.</>
+                )}
                 {selectedCandidate.match === "good" 
                   ? " Overall, they appear to be a strong match for this role."
                   : selectedCandidate.match === "maybe"

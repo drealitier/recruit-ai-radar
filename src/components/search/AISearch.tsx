@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface AISearchProps {
   defaultTable?: string;
-  onResultsFound?: (results: any[]) => void;
+  onResultsFound?: (results: any[], query: string) => void;
 }
 
 const AISearch = ({ defaultTable = "candidates", onResultsFound }: AISearchProps) => {
@@ -50,7 +50,7 @@ const AISearch = ({ defaultTable = "candidates", onResultsFound }: AISearchProps
         setSqlQuery(data.sqlQuery || "");
         
         if (onResultsFound) {
-          onResultsFound(data.results);
+          onResultsFound(data.results, query);
         }
 
         toast({
@@ -85,7 +85,7 @@ const AISearch = ({ defaultTable = "candidates", onResultsFound }: AISearchProps
               <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder={`e.g. "Find candidates with React skills" or "Show me job postings in San Francisco"`}
+                placeholder={`e.g. "Find candidates with React skills" or "Show me frontend developers"`}
                 className="pl-8"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}

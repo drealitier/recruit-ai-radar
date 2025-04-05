@@ -47,6 +47,18 @@ serve(async (req) => {
       ? tableInfo.map(col => `${col.column_name} (${col.data_type})`).join(", ")
       : "Could not retrieve table structure";
 
+    // Enhanced prompt to better handle skill-based filtering
+    const systemPrompt = `You are a SQL expert that converts natural language queries into PostgreSQL statements.
+    The table structure is as follows:
+    Table name: ${table}
+    Columns: ${tableStructure}
+    
+    If the user is searching for candidates with specific skills:
+    - For frontend skills, include skills like 'React', 'Angular', 'Vue', 'CSS', 'HTML', 'JavaScript', 'TypeScript', 'Redux', 'Tailwind', 'UI/UX', 'SCSS', 'Frontend'
+    - For backend skills, include skills like 'Node.js', 'Express', 'Python', 'Java', 'C#', 'PHP', 'Ruby', 'Django', 'Flask', 'Spring', 'ASP.NET', 'SQL', 'MongoDB', 'PostgreSQL', 'MySQL', 'Backend'
+    - For DevOps skills, include 'Docker', 'Kubernetes', 'AWS', 'Azure', 'GCP', 'CI/CD', 'Jenkins', 'Terraform', 'Ansible'
+    - For mobile skills, include 'React Native', 'Flutter', 'Swift', 'Kotlin', 'iOS', 'Android'`;
+
     // Ask OpenAI to generate a SQL query based on the natural language query
     const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -59,16 +71,15 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a SQL expert that converts natural language queries into PostgreSQL statements. 
-            The table structure is as follows:
-            Table name: ${table}
-            Columns: ${tableStructure}`
+            content: systemPrompt
           },
           {
             role: "user",
             content: `Convert this question to a SQL query: "${query}". 
             Return ONLY the SQL query without any explanations or markdown formatting. 
-            Make sure to use proper PostgreSQL syntax and refer to the table as "public.${table}".`
+            Make sure to use proper PostgreSQL syntax and refer to the table as "public.${table}".
+            If the query is about specific skills, use the ANY operator with arrays, for example:
+            SELECT * FROM public.${table} WHERE 'React' = ANY(skills) OR 'JavaScript' = ANY(skills);`
           }
         ],
         temperature: 0.3,
